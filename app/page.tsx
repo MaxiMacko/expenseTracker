@@ -22,7 +22,7 @@ export default function HomePage() {
   } = useExpenseStore();
 
   useEffect(() => {
-    loadLocalState();
+    void loadLocalState();
   }, [loadLocalState]);
 
   return (

@@ -85,8 +85,6 @@ type ExpenseState = {
   addCategory: (category: string) => void;
 };
 
-const STORAGE_KEY = 'expense-tracker-state';
-
 const defaultFilters: ExpenseFilters = {
   startDate: thisMonthStart,
   endDate: thisMonthEnd,
@@ -104,20 +102,25 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
   filters: defaultFilters,
   viewMode: 'day',
   chartMode: 'month',
-  loadLocalState: () => {
+  loadLocalState: async () => {
     if (typeof window === 'undefined') return;
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as { expenses: Expense[]; categories: string[] };
-      set({ expenses: parsed.expenses || [], categories: parsed.categories || defaultCategories });
-      return;
-    }
 
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ expenses: sampleExpenses, categories: sampleCategories })
-    );
-    set({ expenses: sampleExpenses, categories: sampleCategories });
+    try {
+      const [expensesResponse, categoriesResponse] = await Promise.all([
+        fetch('/api/expenses'),
+        fetch('/api/categories')
+      ]);
+
+      const expensesBody = expensesResponse.ok ? await expensesResponse.json() : null;
+      const categoriesBody = categoriesResponse.ok ? await categoriesResponse.json() : null;
+
+      set({
+        expenses: expensesBody?.expenses ?? [],
+        categories: categoriesBody?.categories ?? defaultCategories
+      });
+    } catch (error) {
+      set({ expenses: [], categories: defaultCategories });
+    }
   },
   setActiveTab: (activeTab) => set({ activeTab }),
   openModalForNewExpense: () => set({ isModalOpen: true, editingExpense: null }),
@@ -132,16 +135,25 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(expense)
     });
+
     if (!response.ok) {
       return;
     }
+
+    const result = await response.json();
+    const createdExpense = result.item as Expense;
+
     set((state) => {
-      const next = { ...state, expenses: [...state.expenses, expense] };
-      if (!state.categories.includes(expense.category)) {
-        next.categories = [...state.categories, expense.category];
-      }
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: next.expenses, categories: next.categories }));
-      return next;
+      const nextExpenses = [...state.expenses, createdExpense];
+      const nextCategories = state.categories.includes(createdExpense.category)
+        ? state.categories
+        : [...state.categories, createdExpense.category];
+
+      return {
+        ...state,
+        expenses: nextExpenses,
+        categories: nextCategories
+      };
     });
   },
   updateExpense: async (expense) => {
@@ -150,41 +162,58 @@ const useExpenseStore = create<ExpenseState>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(expense)
     });
+
     if (!response.ok) {
       return;
     }
+
+    const result = await response.json();
+    const updatedExpense = result.item as Expense;
+
     set((state) => {
-      const updated = state.expenses.map((item) => (item.id === expense.id ? expense : item));
-      const categories = state.categories.includes(expense.category)
+      const updated = state.expenses.map((item) => (item.id === updatedExpense.id ? updatedExpense : item));
+      const categories = state.categories.includes(updatedExpense.category)
         ? state.categories
-        : [...state.categories, expense.category];
-      const next = { ...state, expenses: updated, categories };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: next.expenses, categories: next.categories }));
-      return next;
+        : [...state.categories, updatedExpense.category];
+
+      return { ...state, expenses: updated, categories };
     });
   },
   deleteExpense: async (id) => {
     const response = await fetch(`/api/expenses?id=${id}`, {
       method: 'DELETE'
     });
+
     if (!response.ok) {
       return;
     }
-    set((state) => {
-      const updated = state.expenses.filter((expense) => expense.id !== id);
-      const next = { ...state, expenses: updated };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: next.expenses, categories: next.categories }));
-      return next;
-    });
+
+    set((state) => ({
+      ...state,
+      expenses: state.expenses.filter((expense) => expense.id !== id)
+    }));
   },
-  addCategory: (category) =>
-    set((state) => {
-      const normalized = category.trim();
-      if (!normalized || state.categories.includes(normalized)) return state;
-      const next = { ...state, categories: [...state.categories, normalized] };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: next.expenses, categories: next.categories }));
-      return next;
-    })
+  addCategory: async (category) => {
+    const normalized = category.trim();
+    if (!normalized) return;
+
+    if (get().categories.includes(normalized)) return;
+
+    const response = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: normalized })
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    set((state) => ({
+      ...state,
+      categories: [...state.categories, normalized]
+    }));
+  }
 }));
 
 export default useExpenseStore;

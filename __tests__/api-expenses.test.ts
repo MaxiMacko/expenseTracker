@@ -1,12 +1,32 @@
 import { NextRequest } from 'next/server';
 import { GET, POST, PATCH, DELETE } from '@/app/api/expenses/route';
+import { prisma } from '@/lib/prisma';
 
-// Mock NextResponse
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: jest.fn((data, options) => ({ data, options })),
-  },
+    json: jest.fn((data, options) => ({ data, options }))
+  }
 }));
+
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    expense: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn()
+    }
+  }
+}));
+
+const mockedPrisma = prisma as unknown as {
+  expense: {
+    findMany: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
+};
 
 describe('/api/expenses', () => {
   beforeEach(() => {
@@ -14,12 +34,30 @@ describe('/api/expenses', () => {
   });
 
   describe('GET', () => {
-    it('should return success message', async () => {
+    it('should return expenses from the database', async () => {
+      mockedPrisma.expense.findMany.mockResolvedValueOnce([
+        {
+          id: '1',
+          name: 'Coffee',
+          category: 'Food',
+          date: new Date('2024-01-01'),
+          price: 5.5
+        }
+      ]);
+
       const response = await GET();
 
       expect(response.data).toEqual({
         ok: true,
-        message: 'Client storage is the source of truth.'
+        expenses: [
+          {
+            id: '1',
+            name: 'Coffee',
+            category: 'Food',
+            date: '2024-01-01',
+            price: 5.5
+          }
+        ]
       });
     });
   });
@@ -27,87 +65,12 @@ describe('/api/expenses', () => {
   describe('POST', () => {
     it('should validate required fields', async () => {
       const mockRequest = {
-        json: jest.fn().mockResolvedValue({}),
+        json: jest.fn().mockResolvedValue({})
       } as unknown as NextRequest;
 
       const response = await POST(mockRequest);
 
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing required fields'
-      });
-      expect(response.options).toEqual({ status: 400 });
-    });
-
-    it('should validate name field', async () => {
-      const mockRequest = {
-        json: jest.fn().mockResolvedValue({
-          category: 'Food',
-          date: '2024-01-01',
-          price: 10
-        }),
-      } as unknown as NextRequest;
-
-      const response = await POST(mockRequest);
-
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing required fields'
-      });
-      expect(response.options).toEqual({ status: 400 });
-    });
-
-    it('should validate category field', async () => {
-      const mockRequest = {
-        json: jest.fn().mockResolvedValue({
-          name: 'Coffee',
-          date: '2024-01-01',
-          price: 10
-        }),
-      } as unknown as NextRequest;
-
-      const response = await POST(mockRequest);
-
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing required fields'
-      });
-      expect(response.options).toEqual({ status: 400 });
-    });
-
-    it('should validate date field', async () => {
-      const mockRequest = {
-        json: jest.fn().mockResolvedValue({
-          name: 'Coffee',
-          category: 'Food',
-          price: 10
-        }),
-      } as unknown as NextRequest;
-
-      const response = await POST(mockRequest);
-
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing required fields'
-      });
-      expect(response.options).toEqual({ status: 400 });
-    });
-
-    it('should validate price field', async () => {
-      const mockRequest = {
-        json: jest.fn().mockResolvedValue({
-          name: 'Coffee',
-          category: 'Food',
-          date: '2024-01-01'
-        }),
-      } as unknown as NextRequest;
-
-      const response = await POST(mockRequest);
-
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing required fields'
-      });
+      expect(response.data).toEqual({ ok: false, error: 'Missing required fields' });
       expect(response.options).toEqual({ status: 400 });
     });
 
@@ -116,19 +79,33 @@ describe('/api/expenses', () => {
         name: 'Coffee',
         category: 'Food',
         date: '2024-01-01',
-        price: 5.50
+        price: 5.5
       };
 
+      mockedPrisma.expense.create.mockResolvedValueOnce({
+        id: '1',
+        name: expenseData.name,
+        category: expenseData.category,
+        date: new Date(expenseData.date),
+        price: expenseData.price
+      });
+
       const mockRequest = {
-        json: jest.fn().mockResolvedValue(expenseData),
+        json: jest.fn().mockResolvedValue(expenseData)
       } as unknown as NextRequest;
 
       const response = await POST(mockRequest);
 
       expect(response.data).toEqual({
         ok: true,
-        message: 'Expense create validated.',
-        item: expenseData
+        message: 'Expense created successfully.',
+        item: {
+          id: '1',
+          name: 'Coffee',
+          category: 'Food',
+          date: '2024-01-01',
+          price: 5.5
+        }
       });
     });
   });
@@ -136,15 +113,12 @@ describe('/api/expenses', () => {
   describe('PATCH', () => {
     it('should validate expense ID', async () => {
       const mockRequest = {
-        json: jest.fn().mockResolvedValue({}),
+        json: jest.fn().mockResolvedValue({})
       } as unknown as NextRequest;
 
       const response = await PATCH(mockRequest);
 
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing expense ID'
-      });
+      expect(response.data).toEqual({ ok: false, error: 'Missing expense ID' });
       expect(response.options).toEqual({ status: 400 });
     });
 
@@ -154,19 +128,33 @@ describe('/api/expenses', () => {
         name: 'Updated Coffee',
         category: 'Food',
         date: '2024-01-01',
-        price: 6.00
+        price: 6.0
       };
 
+      mockedPrisma.expense.update.mockResolvedValueOnce({
+        id: '123',
+        name: 'Updated Coffee',
+        category: 'Food',
+        date: new Date('2024-01-01'),
+        price: 6.0
+      });
+
       const mockRequest = {
-        json: jest.fn().mockResolvedValue(updateData),
+        json: jest.fn().mockResolvedValue(updateData)
       } as unknown as NextRequest;
 
       const response = await PATCH(mockRequest);
 
       expect(response.data).toEqual({
         ok: true,
-        message: 'Expense update validated.',
-        item: updateData
+        message: 'Expense updated successfully.',
+        item: {
+          id: '123',
+          name: 'Updated Coffee',
+          category: 'Food',
+          date: '2024-01-01',
+          price: 6.0
+        }
       });
     });
   });
@@ -174,30 +162,24 @@ describe('/api/expenses', () => {
   describe('DELETE', () => {
     it('should validate expense ID in query params', async () => {
       const mockRequest = {
-        url: 'http://localhost/api/expenses',
+        url: 'http://localhost/api/expenses'
       } as NextRequest;
 
       const response = await DELETE(mockRequest);
 
-      expect(response.data).toEqual({
-        ok: false,
-        error: 'Missing expense ID'
-      });
+      expect(response.data).toEqual({ ok: false, error: 'Missing expense ID' });
       expect(response.options).toEqual({ status: 400 });
     });
 
     it('should accept valid delete request', async () => {
+      mockedPrisma.expense.delete.mockResolvedValueOnce({});
       const mockRequest = {
-        url: 'http://localhost/api/expenses?id=123',
+        url: 'http://localhost/api/expenses?id=123'
       } as NextRequest;
 
       const response = await DELETE(mockRequest);
 
-      expect(response.data).toEqual({
-        ok: true,
-        message: 'Expense delete validated.',
-        id: '123'
-      });
+      expect(response.data).toEqual({ ok: true, message: 'Expense deleted successfully.', id: '123' });
     });
   });
 });

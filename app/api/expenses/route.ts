@@ -1,32 +1,97 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { Expense } from '@/lib/types';
+import { prisma } from '@/lib/prisma';
+import type { Expense } from '@/lib/types';
+
+const serializeExpense = (expense: { id: string; name: string; category: string; date: Date; price: number }) => ({
+  id: expense.id,
+  name: expense.name,
+  category: expense.category,
+  date: expense.date.toISOString().slice(0, 10),
+  price: expense.price
+});
+
+const jsonError = (message: string, status = 500) => NextResponse.json({ ok: false, error: message }, { status });
 
 export async function GET() {
-  return NextResponse.json({ ok: true, message: 'Client storage is the source of truth.' });
+  try {
+    const expenses = await prisma.expense.findMany({ orderBy: { date: 'desc' } });
+    return NextResponse.json({ ok: true, expenses: expenses.map(serializeExpense) });
+  } catch (error) {
+    return jsonError('Unable to load expenses');
+  }
 }
 
 export async function POST(request: NextRequest) {
   const data = (await request.json()) as Partial<Expense>;
-  if (!data.name || !data.category || !data.date || !data.price) {
-    return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
+  if (!data.name || !data.category || !data.date || typeof data.price !== 'number') {
+    return jsonError('Missing required fields', 400);
   }
-  return NextResponse.json({ ok: true, message: 'Expense create validated.', item: data });
+
+  const parsedDate = new Date(data.date);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return jsonError('Invalid date', 400);
+  }
+
+  try {
+    const expense = await prisma.expense.create({
+      data: {
+        id: data.id,
+        name: data.name.trim(),
+        category: data.category.trim(),
+        date: parsedDate,
+        price: data.price
+      }
+    });
+
+    return NextResponse.json({ ok: true, message: 'Expense created successfully.', item: serializeExpense(expense) });
+  } catch (error) {
+    return jsonError('Unable to create expense');
+  }
 }
 
 export async function PATCH(request: NextRequest) {
   const data = (await request.json()) as Partial<Expense>;
   if (!data.id) {
-    return NextResponse.json({ ok: false, error: 'Missing expense ID' }, { status: 400 });
+    return jsonError('Missing expense ID', 400);
   }
-  return NextResponse.json({ ok: true, message: 'Expense update validated.', item: data });
+
+  try {
+    const updatePayload: { name?: string; category?: string; date?: Date; price?: number } = {};
+
+    if (data.name) updatePayload.name = data.name.trim();
+    if (data.category) updatePayload.category = data.category.trim();
+    if (data.date) {
+      const parsedDate = new Date(data.date);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return jsonError('Invalid date', 400);
+      }
+      updatePayload.date = parsedDate;
+    }
+    if (typeof data.price === 'number') updatePayload.price = data.price;
+
+    const expense = await prisma.expense.update({
+      where: { id: data.id },
+      data: updatePayload
+    });
+
+    return NextResponse.json({ ok: true, message: 'Expense updated successfully.', item: serializeExpense(expense) });
+  } catch (error) {
+    return jsonError('Unable to update expense', 500);
+  }
 }
 
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) {
-    return NextResponse.json({ ok: false, error: 'Missing expense ID' }, { status: 400 });
+    return jsonError('Missing expense ID', 400);
   }
-  return NextResponse.json({ ok: true, message: 'Expense delete validated.', id });
+
+  try {
+    await prisma.expense.delete({ where: { id } });
+    return NextResponse.json({ ok: true, message: 'Expense deleted successfully.', id });
+  } catch (error) {
+    return jsonError('Expense not found', 404);
+  }
 }

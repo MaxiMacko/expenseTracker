@@ -12,6 +12,9 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -25,6 +28,7 @@
     "docker:prod:down": "docker-compose -f docker-compose.prod.yml down"
   },
   "dependencies": {
+    "@prisma/client": "^5.12.0",
     "@tanstack/react-table": "^8.8.0",
     "date-fns": "^2.30.0",
     "next": "^15.0.0",
@@ -35,6 +39,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "prisma": "^5.12.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

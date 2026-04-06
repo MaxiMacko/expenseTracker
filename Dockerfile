@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:22-bullseye AS builder
 
 WORKDIR /app
 
@@ -12,11 +12,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Build the Next.js application
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine
+FROM node:22-bullseye
 
 WORKDIR /app
 
@@ -24,7 +27,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install dumb-init to handle signals properly
-RUN apk add --no-cache dumb-init curl
+RUN apt-get update && apt-get install -y dumb-init curl && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -32,14 +35,18 @@ COPY package.json package-lock.json ./
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
+# Copy Prisma client artifacts from builder
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
 # Copy built application from builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/tsconfig.json ./
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN groupadd -g 1001 nodejs
+RUN useradd --uid 1001 --gid 1001 --no-create-home --shell /usr/sbin/nologin nextjs
 USER nextjs
 
 # Expose port
