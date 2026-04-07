@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import useExpenseStore from '@/store/useExpenseStore';
 import { formatCurrency } from '@/lib/utils';
@@ -10,6 +10,7 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 
 export default function ChartsTab() {
   const { expenses, chartMode, setChartMode } = useExpenseStore();
+  const [enabledCategories, setEnabledCategories] = useState<Set<string>>(new Set());
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
@@ -33,8 +34,14 @@ export default function ChartsTab() {
       acc[expense.category] = (acc[expense.category] || 0) + expense.price;
       return acc;
     }, {});
-    return Object.entries(totals).map(([name, value]) => ({ name, value }));
-  }, [filteredExpenses]);
+
+    // If no categories are enabled, show all categories
+    const categoriesToShow = enabledCategories.size === 0 ? Object.keys(totals) : Array.from(enabledCategories);
+
+    return Object.entries(totals)
+      .filter(([name]) => categoriesToShow.includes(name))
+      .map(([name, value]) => ({ name, value }));
+  }, [filteredExpenses, enabledCategories]);
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, index) => ({ month: MONTH_LABELS[index], value: 0 }));
@@ -46,6 +53,33 @@ export default function ChartsTab() {
     });
     return months;
   }, [expenses, currentYear]);
+
+  // Get all available categories from current filtered expenses
+  const allCategories = useMemo(() => {
+    const totals = filteredExpenses.reduce<Record<string, number>>((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.price;
+      return acc;
+    }, {});
+    return Object.keys(totals).sort();
+  }, [filteredExpenses]);
+
+  const toggleCategory = (category: string) => {
+    const newEnabled = new Set(enabledCategories);
+    if (newEnabled.has(category)) {
+      newEnabled.delete(category);
+    } else {
+      newEnabled.add(category);
+    }
+    setEnabledCategories(newEnabled);
+  };
+
+  const toggleAllCategories = () => {
+    if (enabledCategories.size === allCategories.length) {
+      setEnabledCategories(new Set());
+    } else {
+      setEnabledCategories(new Set(allCategories));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -80,6 +114,35 @@ export default function ChartsTab() {
               {chartMode}
             </div>
           </div>
+
+          {/* Category Toggle Checkboxes */}
+          {allCategories.length > 0 && (
+            <div className="mb-6 flex items-center gap-3 flex-wrap">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enabledCategories.size === allCategories.length}
+                  onChange={toggleAllCategories}
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded"
+                />
+                <span className="ml-2 text-xs font-semibold text-slate-700">All</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {allCategories.map((category) => (
+                  <label key={category} className="inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enabledCategories.size === 0 || enabledCategories.has(category)}
+                      onChange={() => toggleCategory(category)}
+                      className="w-4 h-4 text-blue-600 border-slate-300 rounded"
+                    />
+                    <span className="ml-2 text-xs font-medium text-slate-600">{category}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
