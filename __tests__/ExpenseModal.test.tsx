@@ -5,12 +5,12 @@ import useExpenseStore from '@/store/useExpenseStore';
 import type { Expense } from '@/lib/types';
 
 // Mock the store
-jest.mock('@/store/useExpenseStore');
-const mockUseExpenseStore = useExpenseStore as jest.MockedFunction<typeof useExpenseStore>;
+vi.mock('@/store/useExpenseStore');
+const mockUseExpenseStore = useExpenseStore as any;
 
 // Mock date picker
-jest.mock('react-datepicker', () => {
-  return ({ selected, onChange, dateFormat, className }: any) => (
+vi.mock('react-datepicker', () => ({
+  default: ({ selected, onChange, dateFormat, className }: any) => (
     <input
       type="date"
       value={selected ? selected.toISOString().slice(0, 10) : ''}
@@ -18,14 +18,14 @@ jest.mock('react-datepicker', () => {
       className={className}
       data-testid="date-picker"
     />
-  );
-});
+  )
+}));
 
 describe('ExpenseModal', () => {
-  const mockAddExpense = jest.fn();
-  const mockUpdateExpense = jest.fn();
-  const mockAddCategory = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockAddExpense = vi.fn();
+  const mockUpdateExpense = vi.fn();
+  const mockAddCategory = vi.fn();
+  const mockOnClose = vi.fn();
 
   const defaultStoreState = {
     editingExpense: null,
@@ -36,7 +36,7 @@ describe('ExpenseModal', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseExpenseStore.mockReturnValue(defaultStoreState as any);
   });
 

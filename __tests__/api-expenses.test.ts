@@ -2,35 +2,35 @@ import { NextRequest } from 'next/server';
 import { GET, POST, PATCH, DELETE } from '@/app/api/expenses/route';
 import { prisma } from '@/lib/prisma';
 
-jest.mock('next/server', () => ({
+vi.mock('next/server', () => ({
   NextResponse: {
-    json: jest.fn((data, options) => ({ data, options }))
+    json: vi.fn((data, options) => ({ data, options }))
   }
 }));
 
-jest.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/prisma', () => ({
   prisma: {
     expense: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     }
   }
 }));
 
 const mockedPrisma = prisma as unknown as {
   expense: {
-    findMany: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
+    findMany: any;
+    create: any;
+    update: any;
+    delete: any;
   };
 };
 
 describe('/api/expenses', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GET', () => {
@@ -65,7 +65,7 @@ describe('/api/expenses', () => {
   describe('POST', () => {
     it('should validate required fields', async () => {
       const mockRequest = {
-        json: jest.fn().mockResolvedValue({})
+        json: vi.fn().mockResolvedValue({})
       } as unknown as NextRequest;
 
       const response = await POST(mockRequest);
@@ -91,7 +91,7 @@ describe('/api/expenses', () => {
       });
 
       const mockRequest = {
-        json: jest.fn().mockResolvedValue(expenseData)
+        json: vi.fn().mockResolvedValue(expenseData)
       } as unknown as NextRequest;
 
       const response = await POST(mockRequest);
@@ -113,7 +113,7 @@ describe('/api/expenses', () => {
   describe('PATCH', () => {
     it('should validate expense ID', async () => {
       const mockRequest = {
-        json: jest.fn().mockResolvedValue({})
+        json: vi.fn().mockResolvedValue({})
       } as unknown as NextRequest;
 
       const response = await PATCH(mockRequest);
@@ -140,7 +140,7 @@ describe('/api/expenses', () => {
       });
 
       const mockRequest = {
-        json: jest.fn().mockResolvedValue(updateData)
+        json: vi.fn().mockResolvedValue(updateData)
       } as unknown as NextRequest;
 
       const response = await PATCH(mockRequest);

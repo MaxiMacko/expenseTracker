@@ -5,14 +5,14 @@ import useExpenseStore from '@/store/useExpenseStore';
 import type { Expense, ExpenseFilters } from '@/lib/types';
 
 // Mock the store
-jest.mock('@/store/useExpenseStore');
-const mockUseExpenseStore = useExpenseStore as jest.MockedFunction<typeof useExpenseStore>;
+vi.mock('@/store/useExpenseStore');
+const mockUseExpenseStore = useExpenseStore as any;
 
 describe('ExpenseTable', () => {
-  const mockOpenModalForEditExpense = jest.fn();
-  const mockDeleteExpense = jest.fn();
-  const mockSetViewMode = jest.fn();
-  const mockSetFilters = jest.fn();
+  const mockOpenModalForEditExpense = vi.fn();
+  const mockDeleteExpense = vi.fn();
+  const mockSetViewMode = vi.fn();
+  const mockSetFilters = vi.fn();
 
   const sampleExpenses: Expense[] = [
     { id: '1', name: 'Coffee', category: 'Food', date: '2024-01-15', price: 5.50 },
@@ -35,7 +35,7 @@ describe('ExpenseTable', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseExpenseStore.mockReturnValue(defaultStoreState as any);
   });
 

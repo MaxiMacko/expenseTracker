@@ -4,45 +4,45 @@ import HomePage from '@/app/page';
 import useExpenseStore from '@/store/useExpenseStore';
 
 // Mock the store
-jest.mock('@/store/useExpenseStore');
-const mockUseExpenseStore = useExpenseStore as jest.MockedFunction<typeof useExpenseStore>;
+vi.mock('@/store/useExpenseStore');
+const mockUseExpenseStore = useExpenseStore as any;
 
 // Mock components
-jest.mock('@/components/ExpenseModal', () => {
-  return function MockExpenseModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+vi.mock('@/components/ExpenseModal', () => ({
+  default: function MockExpenseModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     return open ? <div data-testid="expense-modal">Expense Modal</div> : null;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/ExpenseTable', () => {
-  return function MockExpenseTable({ expenses, filters, setFilters }: any) {
+vi.mock('@/components/ExpenseTable', () => ({
+  default: function MockExpenseTable({ expenses, filters, setFilters }: any) {
     return (
       <div data-testid="expense-table">
         <div>Expenses: {expenses.length}</div>
         <button onClick={() => setFilters({ category: 'Food' })}>Filter Food</button>
       </div>
     );
-  };
-});
+  }
+}));
 
-jest.mock('@/components/ChartsTab', () => {
-  return function MockChartsTab() {
+vi.mock('@/components/ChartsTab', () => ({
+  default: function MockChartsTab() {
     return <div data-testid="charts-tab">Charts Tab</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/Toolbar', () => {
-  return function MockToolbar({ onAddExpense }: { onAddExpense: () => void }) {
+vi.mock('@/components/Toolbar', () => ({
+  default: function MockToolbar({ onAddExpense }: { onAddExpense: () => void }) {
     return (
       <div data-testid="toolbar">
         <button onClick={onAddExpense}>Add Expense</button>
       </div>
     );
-  };
-});
+  }
+}));
 
-jest.mock('@/components/TabSwitcher', () => {
-  return function MockTabSwitcher({ activeTab, setActiveTab }: any) {
+vi.mock('@/components/TabSwitcher', () => ({
+  default: function MockTabSwitcher({ activeTab, setActiveTab }: any) {
     return (
       <div data-testid="tab-switcher">
         <button onClick={() => setActiveTab('table')}>Table</button>
@@ -50,15 +50,15 @@ jest.mock('@/components/TabSwitcher', () => {
         <div>Active: {activeTab}</div>
       </div>
     );
-  };
-});
+  }
+}));
 
 describe('HomePage', () => {
-  const mockLoadLocalState = jest.fn();
-  const mockOpenModalForNewExpense = jest.fn();
-  const mockCloseModal = jest.fn();
-  const mockSetFilters = jest.fn();
-  const mockSetActiveTab = jest.fn();
+  const mockLoadLocalState = vi.fn();
+  const mockOpenModalForNewExpense = vi.fn();
+  const mockCloseModal = vi.fn();
+  const mockSetFilters = vi.fn();
+  const mockSetActiveTab = vi.fn();
 
   const defaultStoreState = {
     activeTab: 'table' as const,
@@ -79,7 +79,7 @@ describe('HomePage', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseExpenseStore.mockReturnValue(defaultStoreState as any);
   });
 

@@ -6,12 +6,12 @@ const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 const createResponse = (ok: boolean, body: any) => ({
   ok,
-  json: jest.fn().mockResolvedValue(body)
+  json: vi.fn().mockResolvedValue(body)
 }) as unknown as Response;
 
 describe('useExpenseStore', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetch.mockClear();
   });
 
