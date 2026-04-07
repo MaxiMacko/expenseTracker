@@ -4,12 +4,23 @@ import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import useExpenseStore from '@/store/useExpenseStore';
 import { formatCurrency } from '@/lib/utils';
+import type { Expense } from '@/lib/types';
 
 const COLORS = ['#0284c7', '#fb7185', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#f97316'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function ChartsTab() {
-  const { expenses, chartMode, setChartMode } = useExpenseStore();
+interface ChartsTabProps {
+  mockExpenses?: Expense[];
+  mockChartMode?: 'day' | 'month' | 'year';
+}
+
+export default function ChartsTab({ mockExpenses, mockChartMode }: ChartsTabProps = {}) {
+  const store = useExpenseStore();
+  const { expenses, chartMode, setChartMode } = store;
+
+  // Use mock data if provided, otherwise use store data
+  const actualExpenses = mockExpenses || expenses;
+  const actualChartMode = mockChartMode || chartMode;
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(new Set());
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -17,17 +28,17 @@ export default function ChartsTab() {
   const todayIso = today.toISOString().slice(0, 10);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((expense) => {
+    return actualExpenses.filter((expense) => {
       const date = new Date(expense.date);
-      if (chartMode === 'day') {
+      if (actualChartMode === 'day') {
         return expense.date === todayIso;
       }
-      if (chartMode === 'month') {
+      if (actualChartMode === 'month') {
         return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
       }
       return date.getFullYear() === currentYear;
     });
-  }, [chartMode, expenses, currentMonth, currentYear, todayIso]);
+  }, [actualChartMode, actualExpenses, currentMonth, currentYear, todayIso]);
 
   const categoryData = useMemo(() => {
     const totals = filteredExpenses.reduce<Record<string, number>>((acc, expense) => {
@@ -45,14 +56,14 @@ export default function ChartsTab() {
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, index) => ({ month: MONTH_LABELS[index], value: 0 }));
-    expenses.forEach((expense) => {
+    actualExpenses.forEach((expense) => {
       const date = new Date(expense.date);
       if (date.getFullYear() === currentYear) {
         months[date.getMonth()].value += expense.price;
       }
     });
     return months;
-  }, [expenses, currentYear]);
+  }, [actualExpenses, currentYear]);
 
   // Get all available categories from current filtered expenses
   const allCategories = useMemo(() => {
@@ -94,7 +105,7 @@ export default function ChartsTab() {
               key={mode}
               type="button"
               onClick={() => setChartMode(mode)}
-              className={`rounded-full px-4 py-2 font-semibold transition ${chartMode === mode ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100'
+              className={`rounded-full px-4 py-2 font-semibold transition ${actualChartMode === mode ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100'
                 }`}
             >
               {mode}
@@ -108,10 +119,10 @@ export default function ChartsTab() {
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-slate-900">Expenses by category</p>
-              <p className="mt-1 text-sm text-slate-500">Current {chartMode} totals</p>
+              <p className="mt-1 text-sm text-slate-500">Current {actualChartMode} totals</p>
             </div>
             <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">
-              {chartMode}
+              {actualChartMode}
             </div>
           </div>
 
