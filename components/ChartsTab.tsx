@@ -105,7 +105,7 @@ export default function ChartsTab() {
               <BarChart data={monthlyData} margin={{ top: 16, right: 10, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis tickFormatter={(value) => `$${value}`} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <YAxis tickFormatter={(value) => `€${value}`} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Bar dataKey="value" fill="#0284c7" radius={[8, 8, 0, 0]} />
               </BarChart>

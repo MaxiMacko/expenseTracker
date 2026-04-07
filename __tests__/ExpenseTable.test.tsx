@@ -45,16 +45,16 @@ describe('ExpenseTable', () => {
     expect(screen.getByText('Coffee')).toBeInTheDocument();
     expect(screen.getByText('Bus ticket')).toBeInTheDocument();
     expect(screen.getByText('Lunch')).toBeInTheDocument();
-    expect(screen.getByText('$5.50')).toBeInTheDocument();
-    expect(screen.getByText('$3.00')).toBeInTheDocument();
-    expect(screen.getByText('$12.00')).toBeInTheDocument();
+    expect(screen.getByText(/5,50\s?€/)).toBeInTheDocument();
+    expect(screen.getByText(/3,00\s?€/)).toBeInTheDocument();
+    expect(screen.getByText(/12,00\s?€/)).toBeInTheDocument();
   });
 
   it('should display total amount', () => {
     render(<ExpenseTable expenses={sampleExpenses} filters={defaultFilters} setFilters={mockSetFilters} />);
 
     expect(screen.getByText(/Total:/i)).toBeInTheDocument();
-    expect(screen.getByText('$20.50')).toBeInTheDocument();
+    expect(screen.getByText(/20,50\s?€/)).toBeInTheDocument();
   });
 
   it('should render filter controls', () => {

@@ -19,20 +19,20 @@ describe('utils', () => {
   });
 
   describe('formatCurrency', () => {
-    it('should format USD currency', () => {
-      expect(formatCurrency(5.50)).toBe('$5.50');
-      expect(formatCurrency(10)).toBe('$10.00');
-      expect(formatCurrency(1234.56)).toBe('$1,234.56');
-      expect(formatCurrency(0)).toBe('$0.00');
+    it('should format EUR currency', () => {
+      expect(formatCurrency(5.50)).toBe('5,50 €');
+      expect(formatCurrency(10)).toBe('10,00 €');
+      expect(formatCurrency(1234.56)).toBe('1.234,56 €');
+      expect(formatCurrency(0)).toBe('0,00 €');
     });
 
     it('should handle negative values', () => {
-      expect(formatCurrency(-5.50)).toBe('-$5.50');
+      expect(formatCurrency(-5.50)).toBe('-5,50 €');
     });
 
     it('should round to 2 decimal places', () => {
-      expect(formatCurrency(5.123)).toBe('$5.12');
-      expect(formatCurrency(5.125)).toBe('$5.13');
+      expect(formatCurrency(5.123)).toBe('5,12 €');
+      expect(formatCurrency(5.125)).toBe('5,13 €');
     });
   });
 });
