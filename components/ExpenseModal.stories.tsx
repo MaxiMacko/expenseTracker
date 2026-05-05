@@ -71,6 +71,10 @@ export const Closed: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    open: false,
+    onClose: () => console.log('Modal closed'),
+  },
   render: () => {
     const [open, setOpen] = useState(false);
     return (

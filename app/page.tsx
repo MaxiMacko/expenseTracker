@@ -36,7 +36,7 @@ export default function HomePage() {
           {activeTab === 'table' ? (
             <ExpenseTable expenses={expenses} filters={filters} setFilters={setFilters} />
           ) : (
-            <ChartsTab />
+            <ChartsTab filters={filters} setFilters={setFilters} />
           )}
         </div>
       </div>

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useState } from 'react';
 import ChartsTab from './ChartsTab';
+import type { ExpenseFilters } from '@/lib/types';
 import { mockExpenses, mockCategories } from '@/stories/mock-store';
 
 const meta = {
@@ -13,6 +15,12 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const defaultFilters: ExpenseFilters = {
+  startDate: '',
+  endDate: '',
+  category: 'all'
+};
 
 /**
  * ChartsTab displays expenses as interactive pie and bar charts.
@@ -39,7 +47,12 @@ export const WithMockData: Story = {
             ))}
           </div>
         </div>
-        <ChartsTab mockExpenses={mockExpenses} mockChartMode="month" />
+        <ChartsTab
+          mockExpenses={mockExpenses}
+          mockChartMode="month"
+          filters={defaultFilters}
+          setFilters={() => { }}
+        />
       </div>
     );
   },
@@ -56,7 +69,12 @@ export const AllCategories: Story = {
         <p className="text-xs mt-2">Categories: {mockCategories.join(', ')}</p>
         <p className="text-xs mt-1">Toggle categories in the pie chart to filter the view</p>
       </div>
-      <ChartsTab mockExpenses={mockExpenses} mockChartMode="month" />
+      <ChartsTab
+        mockExpenses={mockExpenses}
+        mockChartMode="month"
+        filters={defaultFilters}
+        setFilters={() => { }}
+      />
     </div>
   ),
 };
@@ -76,7 +94,69 @@ export const TimeSeriesData: Story = {
           Use the time period selector to view Day, Month, or Year analysis
         </p>
       </div>
-      <ChartsTab mockExpenses={mockExpenses} mockChartMode="year" />
+      <ChartsTab
+        mockExpenses={mockExpenses}
+        mockChartMode="year"
+        filters={defaultFilters}
+        setFilters={() => { }}
+      />
     </div>
   ),
+};
+
+/**
+ * Interactive story with date range and category filtering.
+ * Users can select custom date ranges and filter by category.
+ */
+export const Interactive: Story = {
+  args: {
+    mockExpenses: mockExpenses,
+    mockChartMode: 'month' as const,
+    filters: defaultFilters,
+    setFilters: () => { },
+  },
+  render: () => {
+    const [filters, setFilters] = useState<ExpenseFilters>({
+      startDate: '',
+      endDate: '',
+      category: 'all'
+    });
+
+    const handleSetFilters = (partial: Partial<ExpenseFilters>) => {
+      setFilters((prev) => ({ ...prev, ...partial }));
+    };
+
+    const filteredCount = mockExpenses.filter(expense => {
+      if (filters.category !== 'all' && expense.category !== filters.category) return false;
+      if (filters.startDate && expense.date < filters.startDate) return false;
+      if (filters.endDate && expense.date > filters.endDate) return false;
+      return true;
+    }).length;
+
+    return (
+      <div className="space-y-4 p-4 bg-slate-50">
+        <div className="text-sm text-slate-600">
+          <p className="font-semibold">Interactive Analytics</p>
+          <p className="text-xs mt-2">
+            Showing {filteredCount} of {mockExpenses.length} expenses
+          </p>
+          {filters.category !== 'all' && (
+            <p className="text-xs mt-1">Category filter: <strong>{filters.category}</strong></p>
+          )}
+          {filters.startDate && (
+            <p className="text-xs mt-1">From: <strong>{filters.startDate}</strong></p>
+          )}
+          {filters.endDate && (
+            <p className="text-xs mt-1">To: <strong>{filters.endDate}</strong></p>
+          )}
+        </div>
+        <ChartsTab
+          mockExpenses={mockExpenses}
+          mockChartMode="month"
+          filters={filters}
+          setFilters={handleSetFilters}
+        />
+      </div>
+    );
+  },
 };

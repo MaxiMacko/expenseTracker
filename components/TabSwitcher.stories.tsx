@@ -30,6 +30,10 @@ export const ChartsActive: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    activeTab: 'table',
+    setActiveTab: () => { },
+  },
   render: () => {
     const [activeTab, setActiveTab] = useState<TabName>('table');
     return (

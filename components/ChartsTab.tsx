@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import useExpenseStore from '@/store/useExpenseStore';
 import { formatCurrency } from '@/lib/utils';
-import type { Expense } from '@/lib/types';
+import type { Expense, ExpenseFilters } from '@/lib/types';
 
 const COLORS = ['#0284c7', '#fb7185', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#f97316'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -12,33 +12,28 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 interface ChartsTabProps {
   mockExpenses?: Expense[];
   mockChartMode?: 'day' | 'month' | 'year';
+  filters?: ExpenseFilters;
+  setFilters?: (filters: Partial<ExpenseFilters>) => void;
 }
 
-export default function ChartsTab({ mockExpenses, mockChartMode }: ChartsTabProps = {}) {
+export default function ChartsTab({ mockExpenses, mockChartMode, filters, setFilters }: ChartsTabProps = {}) {
   const store = useExpenseStore();
-  const { expenses, chartMode, setChartMode } = store;
+  const { expenses, chartMode, setChartMode, categories } = store;
 
   // Use mock data if provided, otherwise use store data
   const actualExpenses = mockExpenses || expenses;
   const actualChartMode = mockChartMode || chartMode;
   const [enabledCategories, setEnabledCategories] = useState<Set<string>>(new Set());
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-  const todayIso = today.toISOString().slice(0, 10);
 
   const filteredExpenses = useMemo(() => {
     return actualExpenses.filter((expense) => {
-      const date = new Date(expense.date);
-      if (actualChartMode === 'day') {
-        return expense.date === todayIso;
-      }
-      if (actualChartMode === 'month') {
-        return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
-      }
-      return date.getFullYear() === currentYear;
+      const date = expense.date;
+      if (filters?.category && filters.category !== 'all' && expense.category !== filters.category) return false;
+      if (filters?.startDate && date < filters.startDate) return false;
+      if (filters?.endDate && date > filters.endDate) return false;
+      return true;
     });
-  }, [actualChartMode, actualExpenses, currentMonth, currentYear, todayIso]);
+  }, [actualExpenses, filters]);
 
   const categoryData = useMemo(() => {
     const totals = filteredExpenses.reduce<Record<string, number>>((acc, expense) => {
@@ -56,14 +51,12 @@ export default function ChartsTab({ mockExpenses, mockChartMode }: ChartsTabProp
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, index) => ({ month: MONTH_LABELS[index], value: 0 }));
-    actualExpenses.forEach((expense) => {
+    filteredExpenses.forEach((expense) => {
       const date = new Date(expense.date);
-      if (date.getFullYear() === currentYear) {
-        months[date.getMonth()].value += expense.price;
-      }
+      months[date.getMonth()].value += expense.price;
     });
     return months;
-  }, [actualExpenses, currentYear]);
+  }, [filteredExpenses]);
 
   // Get all available categories from current filtered expenses
   const allCategories = useMemo(() => {
@@ -113,6 +106,44 @@ export default function ChartsTab({ mockExpenses, mockChartMode }: ChartsTabProp
           ))}
         </div>
       </div>
+
+      {filters && setFilters && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Date from</label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(event) => setFilters({ startDate: event.target.value })}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+            />
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Date to</label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(event) => setFilters({ endDate: event.target.value })}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+            />
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Category</label>
+            <select
+              value={filters.category}
+              onChange={(event) => setFilters({ category: event.target.value })}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500"
+            >
+              <option value="all">All categories</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

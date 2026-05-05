@@ -98,6 +98,11 @@ export const LargeDataset: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    expenses: sampleExpenses,
+    filters: { startDate: '', endDate: '', category: 'all' },
+    setFilters: () => { },
+  },
   render: () => {
     const [filters, setFilters] = useState<ExpenseFilters>({
       startDate: '',
@@ -112,6 +117,10 @@ export const Interactive: Story = {
       return true;
     });
 
+    const handleSetFilters = (partial: Partial<ExpenseFilters>) => {
+      setFilters((prev) => ({ ...prev, ...partial }));
+    };
+
     return (
       <div className="space-y-2 p-4 bg-slate-50">
         <div className="text-sm text-slate-600">
@@ -121,7 +130,7 @@ export const Interactive: Story = {
         <ExpenseTable
           expenses={filteredExpenses}
           filters={filters}
-          setFilters={setFilters}
+          setFilters={handleSetFilters}
         />
       </div>
     );

@@ -57,6 +57,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.19",
+    "eslint-config-next": "16.2.4",
     "jsdom": "^24.0.0",
     "postcss": "^8.4.37",
     "prisma": "^5.12.0",
