@@ -24,8 +24,8 @@ const defaultFilters: ExpenseFilters = {
 
 /**
  * ChartsTab displays expenses as interactive pie and bar charts.
- * You can toggle different time periods (day, month, year) and 
- * enable/disable specific categories in the pie chart.
+ * The pie chart shows category distribution based on filtered data,
+ * while the bar chart shows monthly totals for the current year (2026) using all data.
  */
 export const WithMockData: Story = {
   render: () => {
@@ -81,6 +81,7 @@ export const AllCategories: Story = {
 
 /**
  * Example showing multiple time periods for comparison.
+ * Note: Bar chart shows monthly totals for current year (2026) regardless of filters.
  */
 export const TimeSeriesData: Story = {
   render: () => (
@@ -106,7 +107,8 @@ export const TimeSeriesData: Story = {
 
 /**
  * Interactive story with date range and category filtering.
- * Users can select custom date ranges and filter by category.
+ * The pie chart updates based on selected filters, while the bar chart
+ * always shows monthly totals for the current year (2026) using all data.
  */
 export const Interactive: Story = {
   args: {
@@ -155,6 +157,51 @@ export const Interactive: Story = {
           mockChartMode="month"
           filters={filters}
           setFilters={handleSetFilters}
+        />
+      </div>
+    );
+  },
+};
+
+/**
+ * Demonstrates how date filtering affects only the pie chart.
+ * The bar chart shows monthly totals for 2026 regardless of date filters.
+ */
+export const FilteredVsUnfiltered: Story = {
+  render: () => {
+    const filteredExpenses = mockExpenses.filter(expense => {
+      // Filter to April 2026 only
+      return expense.date >= '2026-04-01' && expense.date <= '2026-04-30';
+    });
+
+    const totalFiltered = filteredExpenses.reduce((sum, exp) => sum + exp.price, 0);
+    const totalAll = mockExpenses.reduce((sum, exp) => sum + exp.price, 0);
+
+    const aprilFilters: ExpenseFilters = {
+      startDate: '2026-04-01',
+      endDate: '2026-04-30',
+      category: 'all'
+    };
+
+    return (
+      <div className="space-y-6 p-4 bg-slate-50">
+        <div className="text-sm text-slate-600">
+          <p className="font-semibold">Filtered vs Unfiltered Data</p>
+          <p className="text-xs mt-2">
+            Pie chart shows only April 2026 expenses: €{totalFiltered.toFixed(2)}
+          </p>
+          <p className="text-xs mt-1">
+            Bar chart shows all 2026 expenses: €{totalAll.toFixed(2)}
+          </p>
+          <p className="text-xs mt-1 text-amber-600">
+            Notice: Bar chart data remains unchanged despite date filtering
+          </p>
+        </div>
+        <ChartsTab
+          mockExpenses={mockExpenses}
+          mockChartMode="month"
+          filters={aprilFilters}
+          setFilters={() => { }}
         />
       </div>
     );

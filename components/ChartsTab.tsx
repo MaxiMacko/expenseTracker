@@ -50,13 +50,16 @@ export default function ChartsTab({ mockExpenses, mockChartMode, filters, setFil
   }, [filteredExpenses, enabledCategories]);
 
   const monthlyData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const months = Array.from({ length: 12 }, (_, index) => ({ month: MONTH_LABELS[index], value: 0 }));
-    filteredExpenses.forEach((expense) => {
+    actualExpenses.forEach((expense) => {
       const date = new Date(expense.date);
-      months[date.getMonth()].value += expense.price;
+      if (date.getFullYear() === currentYear) {
+        months[date.getMonth()].value += expense.price;
+      }
     });
     return months;
-  }, [filteredExpenses]);
+  }, [actualExpenses]);
 
   // Get all available categories from current filtered expenses
   const allCategories = useMemo(() => {
