@@ -6,15 +6,15 @@ This directory contains all necessary Docker configuration for containerizing th
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Multi-stage build for Node 22 application image |
-| `docker-compose.yml` | Development environment configuration |
-| `docker-compose.prod.yml` | Production environment configuration |
-| `.dockerignore` | Files excluded from Docker build |
-| `.env.docker` | Environment variables template |
-| `scripts/init-db.sql` | Database initialization script |
-| `DOCKER_SETUP.md` | Complete Docker setup guide |
+| File                      | Purpose                                         |
+| ------------------------- | ----------------------------------------------- |
+| `Dockerfile`              | Multi-stage build for Node 22 application image |
+| `docker-compose.yml`      | Development environment configuration           |
+| `docker-compose.prod.yml` | Production environment configuration            |
+| `.dockerignore`           | Files excluded from Docker build                |
+| `.env.docker`             | Environment variables template                  |
+| `scripts/init-db.sql`     | Database initialization script                  |
+| `DOCKER_SETUP.md`         | Complete Docker setup guide                     |
 
 ---
 
@@ -73,11 +73,12 @@ npm run docker:prod:down
 - **Production**: 3000 (configurable)
 
 ### Environment Variables
+Copy `.env.example` to `.env` and set production values before starting Docker.
 ```env
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres:postgres@db:5432/expense_tracker
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
+NODE_ENV=${NODE_ENV}
+DATABASE_URL=${DATABASE_URL}
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+NEXTAUTH_URL=${NEXTAUTH_URL}
 ```
 
 ---
@@ -96,12 +97,12 @@ NEXTAUTH_URL=http://localhost:3000
 - **Alpine-based**: Minimal footprint
 
 ### Database Configuration
-| Setting | Value |
-|---------|-------|
-| User | postgres |
+| Setting  | Value                   |
+| -------- | ----------------------- |
+| User     | postgres                |
 | Password | postgres (configurable) |
-| Database | expense_tracker |
-| Port | 5432 |
+| Database | expense_tracker         |
+| Port     | 5432                    |
 
 ### Schema Includes
 - **Tables**: expenses, categories
@@ -244,19 +245,19 @@ docker-compose inspect app
 
 ## 📝 Environment Files
 
-### `.env.docker`
-Default environment variables for Docker setup:
+### `.env`
+Local Docker environment. Keep this file private and configure it from `.env.example`:
 ```env
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres:postgres@db:5432/expense_tracker
-NEXTAUTH_SECRET=your-secret-key-change-in-production
-NEXTAUTH_URL=http://localhost:3000
+NODE_ENV=${NODE_ENV}
+DATABASE_URL=${DATABASE_URL}
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+NEXTAUTH_URL=${NEXTAUTH_URL}
 ```
 
 ### `.env.local` (Development)
 Override with local settings:
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/expense_tracker
+DATABASE_URL=${DATABASE_URL}
 ```
 
 ---

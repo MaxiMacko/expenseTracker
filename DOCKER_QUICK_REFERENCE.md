@@ -8,14 +8,14 @@
 - **Network**: Bridge network for inter-service communication
 
 ### Configuration Files
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Production-ready Node 22 application image |
-| `docker-compose.yml` | Development environment |
-| `docker-compose.prod.yml` | Production environment |
-| `.dockerignore` | Files excluded from Docker build |
-| `.env.docker` | Environment variables template |
-| `scripts/init-db.sql` | Database schema and initialization |
+| File                      | Purpose                                    |
+| ------------------------- | ------------------------------------------ |
+| `Dockerfile`              | Production-ready Node 22 application image |
+| `docker-compose.yml`      | Development environment                    |
+| `docker-compose.prod.yml` | Production environment                     |
+| `.dockerignore`           | Files excluded from Docker build           |
+| `.env.docker`             | Environment variables template             |
+| `scripts/init-db.sql`     | Database schema and initialization         |
 
 ### Documentation
 - `DOCKER_SETUP.md` - Complete setup guide with troubleshooting
@@ -55,12 +55,12 @@ npm run docker:prod:down      # Stop production environment
 
 ## 📋 Configuration
 
-### Environment Variables (`.env.docker`)
+### Environment Variables (`.env`)
 ```env
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres:postgres@db:5432/expense_tracker
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
+NODE_ENV=${NODE_ENV}
+DATABASE_URL=${DATABASE_URL}
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+NEXTAUTH_URL=${NEXTAUTH_URL}
 ```
 
 ### Access Points

@@ -90,7 +90,7 @@ docker-compose exec db psql -U postgres -d expense_tracker
 
 #### Query Database from Host
 ```bash
-psql postgresql://postgres:postgres@localhost:5432/expense_tracker
+psql "$DATABASE_URL"
 ```
 
 ### Useful Commands
@@ -152,19 +152,19 @@ docker stats
 ## Environment Variables
 
 ### Application Environment
-Create a `.env.docker` file or use the provided defaults:
+Copy `.env.example` to `.env` and set the required values:
 
 ```env
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres:postgres@db:5432/expense_tracker
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
+NODE_ENV=${NODE_ENV}
+DATABASE_URL=${DATABASE_URL}
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+NEXTAUTH_URL=${NEXTAUTH_URL}
 ```
 
 ### Database Environment
-- `POSTGRES_USER`: Database user (default: postgres)
-- `POSTGRES_PASSWORD`: Database password (default: postgres)
-- `POSTGRES_DB`: Database name (default: expense_tracker)
+- `POSTGRES_USER`: Database user from `.env`
+- `POSTGRES_PASSWORD`: Database password from `.env`
+- `POSTGRES_DB`: Database name from `.env`
 
 ## Database Schema
 
