@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 
 export const SESSION_COOKIE = 'expense_tracker_session';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+const secureSessionCookie = process.env.NEXTAUTH_URL?.startsWith('https://') ?? process.env.NODE_ENV === 'production';
 
 const hashPassword = (password: string) => {
   const salt = randomBytes(16).toString('hex');
@@ -27,7 +28,7 @@ export async function createSession(userId: string) {
   await prisma.session.create({
     data: { tokenHash: hashSessionToken(token), userId, expiresAt: new Date(Date.now() + SESSION_MAX_AGE * 1000) }
   });
-  (await cookies()).set(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: SESSION_MAX_AGE });
+  (await cookies()).set(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: secureSessionCookie, path: '/', maxAge: SESSION_MAX_AGE });
 }
 
 export async function clearSession() {
