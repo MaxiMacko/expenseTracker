@@ -49,6 +49,11 @@ export default function ChartsTab({ mockExpenses, mockChartMode, filters, setFil
       .map(([name, value]) => ({ name, value }));
   }, [filteredExpenses, enabledCategories]);
 
+  const selectedCategoryTotal = useMemo(
+    () => categoryData.reduce((sum, entry) => sum + entry.value, 0),
+    [categoryData]
+  );
+
   const monthlyData = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const months = Array.from({ length: 12 }, (_, index) => ({ month: MONTH_LABELS[index], value: 0 }));
@@ -200,6 +205,11 @@ export default function ChartsTab({ mockExpenses, mockChartMode, filters, setFil
                 <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+
+          <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Selected categories total</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{formatCurrency(selectedCategoryTotal)}</p>
           </div>
         </section>
 
