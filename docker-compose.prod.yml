@@ -24,7 +24,7 @@ services:
     networks:
       - expense-tracker-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/expenses"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/auth';
 
 const defaultCategories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Subscriptions'];
 
@@ -8,11 +9,13 @@ const jsonError = (message: string, status = 500) => NextResponse.json({ ok: fal
 
 export async function GET() {
   try {
-    let categories = (await prisma.category.findMany({ orderBy: { name: 'asc' } })) as Array<{ name: string }>;
+    const user = await requireUser();
+    if (!user) return jsonError('Unauthorized', 401);
+    let categories = (await prisma.category.findMany({ where: { userId: user.id }, orderBy: { name: 'asc' } })) as Array<{ name: string }>;
 
     if (!categories.length) {
       await prisma.category.createMany({
-        data: defaultCategories.map((name) => ({ name })),
+        data: defaultCategories.map((name) => ({ name, userId: user.id })),
         skipDuplicates: true
       });
       categories = defaultCategories.map((name) => ({ name }));
@@ -25,6 +28,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return jsonError('Unauthorized', 401);
   const data = await request.json();
   const category = String(data?.category ?? '').trim();
 
@@ -34,9 +39,9 @@ export async function POST(request: NextRequest) {
 
   try {
     await prisma.category.upsert({
-      where: { name: category },
+      where: { userId_name: { userId: user.id, name: category } },
       update: {},
-      create: { name: category }
+      create: { name: category, userId: user.id }
     });
     return NextResponse.json({ ok: true, category });
   } catch (error) {

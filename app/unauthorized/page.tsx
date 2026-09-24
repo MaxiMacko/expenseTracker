@@ -1,0 +1,3 @@
+export default function UnauthorizedPage() {
+  return <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center"><h1 className="text-3xl font-bold text-slate-900">You need to log in</h1><p className="text-slate-600">This page is available only to registered users.</p><a href="/login" className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Go to login</a></main>;
+}

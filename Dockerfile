@@ -43,6 +43,7 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/prisma ./prisma
 
 # Create non-root user for security
 RUN groupadd -g 1001 nodejs
@@ -54,10 +55,10 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3000/api/expenses || exit 1
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Use dumb-init to properly handle signals
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

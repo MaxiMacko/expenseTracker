@@ -19,6 +19,10 @@ vi.mock('@/lib/prisma', () => ({
   }
 }));
 
+vi.mock('@/lib/auth', () => ({
+  requireUser: vi.fn().mockResolvedValue({ id: 'user-1' })
+}));
+
 const mockedPrisma = prisma as unknown as {
   expense: {
     findMany: any;
