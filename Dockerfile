@@ -3,6 +3,9 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+
 # Copy package files
 COPY package.json package-lock.json ./
 

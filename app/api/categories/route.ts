@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth';
+import { captureServerException } from '@/lib/monitoring';
 
 const defaultCategories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Subscriptions'];
 
@@ -23,6 +24,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, categories: categories.map((category) => category.name) });
   } catch (error) {
+    captureServerException(error, { operation: 'categories.get' });
     return jsonError('Unable to load categories');
   }
 }
@@ -45,6 +47,7 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ ok: true, category });
   } catch (error) {
+    captureServerException(error, { operation: 'categories.create', userId: user.id });
     return jsonError('Unable to save category');
   }
 }

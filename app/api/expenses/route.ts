@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth';
+import { captureServerException } from '@/lib/monitoring';
 import type { Expense } from '@/lib/types';
 
 const serializeExpense = (expense: { id: string; name: string; category: string; date: Date; price: number }) => ({
@@ -21,6 +22,7 @@ export async function GET() {
     const expenses = await prisma.expense.findMany({ where: { userId: user.id }, orderBy: { date: 'desc' } });
     return NextResponse.json({ ok: true, expenses: expenses.map(serializeExpense) });
   } catch (error) {
+    captureServerException(error, { operation: 'expenses.get' });
     return jsonError('Unable to load expenses');
   }
 }
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, message: 'Expense created successfully.', item: serializeExpense(expense) });
   } catch (error) {
+    captureServerException(error, { operation: 'expenses.create', userId: user.id });
     return jsonError('Unable to create expense');
   }
 }
@@ -85,6 +88,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ ok: true, message: 'Expense updated successfully.', item: serializeExpense(expense) });
   } catch (error) {
+    captureServerException(error, { operation: 'expenses.update', userId: user.id });
     return jsonError('Unable to update expense', 500);
   }
 }
@@ -102,6 +106,7 @@ export async function DELETE(request: NextRequest) {
     await prisma.expense.delete({ where: { id, userId: user.id } });
     return NextResponse.json({ ok: true, message: 'Expense deleted successfully.', id });
   } catch (error) {
+    captureServerException(error, { operation: 'expenses.delete', userId: user.id });
     return jsonError('Expense not found', 404);
   }
 }
