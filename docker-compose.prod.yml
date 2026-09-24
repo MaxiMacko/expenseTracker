@@ -9,6 +9,7 @@ services:
       args:
         NODE_ENV: production
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+    image: bblan/expense-tracker-app:latest
     container_name: expense-tracker-app-prod
     restart: always
     ports:
